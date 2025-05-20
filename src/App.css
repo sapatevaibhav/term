@@ -71,6 +71,14 @@
   .term-help {
     @apply text-sm text-terminal-text opacity-70;
   }
+
+  .separator {
+    @apply border-b border-terminal-border my-2 opacity-30;
+  }
+
+  .terminal-line.separator {
+    @apply py-1 my-1;
+  }
 }
 
 /* Custom scrollbar styles */
