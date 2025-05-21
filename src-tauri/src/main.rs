@@ -4,7 +4,57 @@ use std::fs;
 use std::process::Command;
 
 #[tauri::command]
-fn run_shell(command: String) -> Result<String, String> {
+async fn run_shell(command: String) -> Result<String, String> {
+    // Special handling for ls/dir commands to add file type indicators
+    if command.trim() == "ls" || command.trim().starts_with("ls ") ||
+       command.trim() == "dir" || command.trim().starts_with("dir ") {
+        // For Linux/macOS systems, use ls -la for more detailed output
+        let enhanced_command = if cfg!(target_os = "linux") || cfg!(target_os = "macos") {
+            // Replace ls with ls -la to include file types
+            if command.trim() == "ls" {
+                "ls -la".to_string()
+            } else if command.trim().starts_with("ls ") {
+                // Preserve arguments but add -la if not already present
+                if !command.contains(" -l") && !command.contains(" -a") {
+                    format!("{} -la", command)
+                } else if !command.contains(" -l") {
+                    format!("{} -l", command)
+                } else if !command.contains(" -a") {
+                    format!("{} -a", command)
+                } else {
+                    command.clone()
+                }
+            } else {
+                command.clone()
+            }
+        } else {
+            command.clone()
+        };
+
+        // Execute the command
+        let output = if cfg!(target_os = "windows") {
+            Command::new("cmd").args(["/C", &enhanced_command]).output()
+        } else {
+            Command::new("sh").arg("-c").arg(&enhanced_command).output()
+        };
+
+        match output {
+            Ok(out) => {
+                let stdout = String::from_utf8_lossy(&out.stdout);
+                let stderr = String::from_utf8_lossy(&out.stderr);
+
+                if !stderr.is_empty() && stdout.is_empty() {
+                    return Ok(stderr.to_string());
+                }
+
+                // Process the output to add file type indicators
+                return Ok(format_directory_listing(&stdout));
+            }
+            Err(e) => return Err(format!("Failed to run command: {}", e)),
+        }
+    }
+
+    // Regular command execution (non-ls commands)
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd").args(["/C", &command]).output()
     } else {
@@ -21,13 +71,77 @@ fn run_shell(command: String) -> Result<String, String> {
             } else if !stdout.is_empty() {
                 Ok(stdout.to_string())
             } else {
-                Ok(String::from(
-                    "Command executed successfully with no output.",
-                ))
+                Ok(String::from("Command executed successfully with no output."))
             }
         }
         Err(e) => Err(format!("Failed to run command: {}", e)),
     }
+}
+
+// Helper function to format directory listings with file type indicators
+fn format_directory_listing(output: &str) -> String {
+    // Process the output line by line
+    let lines: Vec<&str> = output.lines().collect();
+    let mut formatted_output = String::new();
+
+    for line in lines {
+        // Skip empty lines
+        if line.trim().is_empty() {
+            formatted_output.push_str(line);
+            formatted_output.push('\n');
+            continue;
+        }
+
+        // If this is a header line or total count line, leave it unchanged
+        if line.starts_with("total ") || line.contains("Directory of") {
+            formatted_output.push_str(line);
+            formatted_output.push('\n');
+            continue;
+        }
+
+        // Special handling for Unix-style ls output
+        if cfg!(target_os = "linux") || cfg!(target_os = "macos") {
+            let first_char = line.chars().next().unwrap_or(' ');
+
+            // Check first character of line for Unix ls output
+            if first_char == 'd' {
+                // Directory
+                formatted_output.push_str(&format!("{{DIR}}{}{{/DIR}}", line));
+                formatted_output.push('\n');
+                continue;
+            } else if first_char == 'l' {
+                // Symlink (special handling)
+                formatted_output.push_str(&format!("{{LINK}}{}{{/LINK}}", line));
+                formatted_output.push('\n');
+                continue;
+            } else if first_char == '-' || first_char.is_alphanumeric() {
+                // Regular file
+                formatted_output.push_str(&format!("{{FILE}}{}{{/FILE}}", line));
+                formatted_output.push('\n');
+                continue;
+            }
+        }
+
+        // Windows DIR command handling or fallback
+        let tokens: Vec<&str> = line.split_whitespace().collect();
+        if !tokens.is_empty() {
+            let name = tokens.last().unwrap_or(&"");
+
+            // Check if it's a directory
+            if line.contains("<DIR>") || name.ends_with("/") || name.ends_with("\\") {
+                formatted_output.push_str(&format!("{{DIR}}{}{{/DIR}}", line));
+            } else {
+                // Default to file if we can't determine
+                formatted_output.push_str(&format!("{{FILE}}{}{{/FILE}}", line));
+            }
+            formatted_output.push('\n');
+        } else {
+            formatted_output.push_str(line);
+            formatted_output.push('\n');
+        }
+    }
+
+    formatted_output
 }
 
 #[tauri::command]
@@ -74,7 +188,7 @@ fi
             .map_err(|e| format!("Failed to set permissions: {}", e))?;
     }
 
-    let status = tokio::process::Command::new(&script_file)
+    let _status = tokio::process::Command::new(&script_file)
         .status()
         .await
         .map_err(|e| format!("Failed to execute script: {}", e))?;

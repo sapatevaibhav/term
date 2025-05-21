@@ -103,6 +103,92 @@ function App() {
         }
     };
 
+    // Format directory listings with colors and type indicators
+    const formatOutput = (content: string) => {
+        if (content.includes("{DIR}") || content.includes("{FILE}") || content.includes("{LINK}")) {
+            const lines = content.split('\n');
+            return lines.map((line, i) => {
+                // Directory line
+                if (line.includes("{DIR}")) {
+                    const cleanLine = line.replace("{DIR}", "").replace("{/DIR}", "");
+
+                    // Extract the file name for Unix-style listings
+                    let displayName = cleanLine;
+
+                    // For Unix-style ls output with permissions
+                    if (cleanLine.match(/^d[-rwx]{9}/)) {
+                        const parts = cleanLine.split(/\s+/);
+                        if (parts.length >= 8) {
+                            // Get the last part which should be the name
+                            const namePart = parts.slice(8).join(" ");
+
+                            // Add a trailing slash if it doesn't have one
+                            if (!namePart.endsWith("/")) {
+                                displayName = cleanLine.replace(namePart, `${namePart}/`);
+                            }
+                        }
+                    }
+
+                    return (
+                        <div key={i} className="text-blue-400 font-bold">
+                            <span className="mr-2">📁</span>
+                            {displayName}
+                        </div>
+                    );
+                }
+                // Symlink line
+                else if (line.includes("{LINK}")) {
+                    const cleanLine = line.replace("{LINK}", "").replace("{/LINK}", "");
+                    return (
+                        <div key={i} className="text-cyan-300">
+                            <span className="mr-2">🔗</span>
+                            {cleanLine}
+                        </div>
+                    );
+                }
+                // File line
+                else if (line.includes("{FILE}")) {
+                    const cleanLine = line.replace("{FILE}", "").replace("{/FILE}", "");
+
+                    // Check for common file types to add appropriate icons
+                    const isExecutable = cleanLine.match(/-[-r][-w]x/); // Unix executable
+                    const isImage = /\.(jpg|jpeg|png|gif|bmp|svg|webp)$/i.test(cleanLine);
+                    const isDocument = /\.(pdf|doc|docx|txt|md|json|xml|html|css|js|ts|jsx|tsx)$/i.test(cleanLine);
+                    const isArchive = /\.(zip|tar|gz|rar|7z)$/i.test(cleanLine);
+
+                    let icon = '📄';
+                    let colorClass = 'text-gray-300';
+
+                    if (isExecutable) {
+                        icon = '⚙️';
+                        colorClass = 'text-green-300';
+                    } else if (isImage) {
+                        icon = '🖼️';
+                        colorClass = 'text-purple-300';
+                    } else if (isDocument) {
+                        icon = '📝';
+                        colorClass = 'text-yellow-200';
+                    } else if (isArchive) {
+                        icon = '📦';
+                        colorClass = 'text-orange-300';
+                    }
+
+                    return (
+                        <div key={i} className={colorClass}>
+                            <span className="mr-2">{icon}</span>
+                            {cleanLine}
+                        </div>
+                    );
+                }
+                // Regular line
+                else {
+                    return <div key={i}>{line}</div>;
+                }
+            });
+        }
+        return content; // Return the original content if no special formatting needed
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -203,7 +289,11 @@ function App() {
                         {entry.type === 'command' && <span className="text-blue-400 mr-1.5 font-bold">$</span>}
                         {entry.type === 'llm' && <span className="inline-block bg-green-600 text-black font-bold px-1.5 rounded mr-2">AI</span>}
                         {entry.type === 'separator' && <div className="border-b border-gray-700 my-2 opacity-30"></div>}
-                        {entry.type !== 'separator' && entry.content}
+                        {entry.type !== 'separator' && (
+                            entry.type === 'output' && typeof entry.content === 'string' && (entry.content.includes("{DIR}") || entry.content.includes("{FILE}"))
+                                ? formatOutput(entry.content)
+                                : entry.content
+                        )}
                     </div>
                 ))}
                 {isProcessing && (
