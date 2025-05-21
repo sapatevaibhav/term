@@ -1,19 +1,18 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-pub mod utils;
 pub mod commands;
+pub mod utils;
 
 fn main() {
     dotenvy::dotenv().ok();
 
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            term::run_shell,
-            term::run_sudo_command,
-            term::read_file,
-            term::ask_llm,
-            term::get_current_dir
+            commands::shell::run_shell,
+            commands::shell::run_sudo_command,
+            commands::shell::get_current_dir,
+            commands::shell::list_directory_contents
         ])
         .run(tauri::generate_context!())
-        .expect("error while running tauri app");
+        .expect("error while running tauri application");
 }

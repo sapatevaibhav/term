@@ -151,3 +151,82 @@ pub fn get_current_dir() -> Result<String, String> {
         .map(|path| path.to_string_lossy().into_owned())
         .map_err(|e| format!("Failed to get current directory: {}", e))
 }
+
+#[tauri::command]
+pub async fn list_directory_contents(path: Option<String>) -> Result<Vec<String>, String> {
+    let dir_path = match path {
+        Some(p) if !p.is_empty() => p,
+        _ => ".".to_string()
+    };
+
+    let ls_command = if cfg!(target_os = "windows") {
+        format!("dir /b \"{}\"", dir_path)
+    } else {
+        format!("ls -la \"{}\"", dir_path)
+    };
+
+    let output = if cfg!(target_os = "windows") {
+        Command::new("cmd").args(["/C", &ls_command]).output()
+    } else {
+        Command::new("sh").arg("-c").arg(&ls_command).output()
+    };
+
+    match output {
+        Ok(out) => {
+            let stdout = String::from_utf8_lossy(&out.stdout);
+            let lines: Vec<&str> = stdout.lines().collect();
+            let mut file_list = Vec::new();
+
+            // Skip the first line if it starts with "total" (ls summary)
+            let start_idx = if lines.get(0).map_or(false, |l| l.starts_with("total ")) { 1 } else { 0 };
+
+            for line in lines.iter().skip(start_idx) {
+                let line_trim = line.trim();
+                if line_trim.is_empty() {
+                    continue;
+                }
+
+                // Unix-style ls output with permissions
+                if cfg!(target_os = "linux") || cfg!(target_os = "macos") {
+                    if line_trim.len() < 10 { continue; }
+
+                    let parts: Vec<&str> = line_trim.split_whitespace().collect();
+                    if parts.len() < 9 { continue; }
+
+                    // Join all parts from index 8 to handle filenames with spaces
+                    let filename = parts[8..].join(" ");
+
+                    // Skip . and .. entries
+                    if filename == "." || filename == ".." {
+                        continue;
+                    }
+
+                    // Check file type and add appropriate suffix
+                    let file_type = line_trim.chars().next().unwrap_or('?');
+                    if file_type == 'd' {
+                        file_list.push(format!("{}/", filename));
+                    } else if line_trim.contains("x") && file_type == '-' {
+                        file_list.push(format!("{}*", filename));
+                    } else {
+                        file_list.push(filename);
+                    }
+                } else {
+                    // Windows directory listing (simpler format)
+                    if line_trim != "." && line_trim != ".." {
+                        let path = std::path::Path::new(line_trim);
+                        if path.is_dir() {
+                            file_list.push(format!("{}/", line_trim));
+                        } else if line_trim.ends_with(".exe") || line_trim.ends_with(".bat") || line_trim.ends_with(".cmd") {
+                            file_list.push(format!("{}*", line_trim));
+                        } else {
+                            file_list.push(line_trim.to_string());
+                        }
+                    }
+                }
+            }
+
+            Ok(file_list)
+        },
+        Err(e) => Err(format!("Failed to list directory: {}", e))
+    }
+}

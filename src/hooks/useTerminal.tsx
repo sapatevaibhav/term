@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type{ HistoryEntry } from '../components/Terminal/types';
+import type { HistoryEntry } from '../components/Terminal/types';
 
 const useTerminal = () => {
     const [input, setInput] = useState('');

@@ -81,20 +81,29 @@
   }
 }
 
-/* Custom scrollbar styles */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1e1e1e;
+  background: #2d3748;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #555;
+  background-color: #4a5568;
   border-radius: 4px;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4a5568 #2d3748;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
 }

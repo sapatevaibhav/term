@@ -1,7 +1,7 @@
-mod shell;
-mod files;
 mod ai;
+mod files;
+pub mod shell;
 
-pub use shell::*;
-pub use files::*;
 pub use ai::*;
+pub use files::*;
+pub use shell::*;
