@@ -1,0 +1,8 @@
+add markdown support
+add proper updates to the command like sync/update (for progress)
+DONE : ls colorful (file and folders)
+handle nano/vim
+tab autocomplete
+clickable links
+Fix the cd command
+exit closes term

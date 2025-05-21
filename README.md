@@ -52,3 +52,7 @@ export default tseslint.config({
   },
 })
 ```
+
+
+![alt text](image.png)
+![alt text](image-1.png)
