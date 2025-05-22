@@ -1,4 +1,4 @@
-mod ai;
+pub mod ai;
 mod files;
 pub mod shell;
 

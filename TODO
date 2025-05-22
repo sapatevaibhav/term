@@ -1,8 +1,13 @@
+DONE: Basic prompting
+DONE: Chat history
+DONE : sudo opens popup to enter pass
+DONE : ls colorful (file and folders)
+DONE: tab autocomplete
+DONE: exit closes term
+
 add markdown support
 add proper updates to the command like sync/update (for progress)
-DONE : ls colorful (file and folders)
 handle nano/vim
-tab autocomplete
 clickable links
 Fix the cd command
-exit closes term
+write tests for each of above

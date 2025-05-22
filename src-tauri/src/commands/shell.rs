@@ -2,16 +2,18 @@ use std::process::Command;
 
 #[tauri::command]
 pub async fn run_shell(command: String) -> Result<String, String> {
+    let cmd = command.trim();
+
+    if cmd == "exit" {
+        return Ok("__EXIT_SHELL__".to_string());
+    }
+
     // Special handling for ls/dir commands to add file type indicators
-    if command.trim() == "ls"
-        || command.trim().starts_with("ls ")
-        || command.trim() == "dir"
-        || command.trim().starts_with("dir ")
-    {
+    if cmd == "ls" || cmd.starts_with("ls ") || cmd == "dir" || cmd.starts_with("dir ") {
         let enhanced_command = if cfg!(target_os = "linux") || cfg!(target_os = "macos") {
-            if command.trim() == "ls" {
+            if cmd == "ls" {
                 "ls -la".to_string()
-            } else if command.trim().starts_with("ls ") {
+            } else if cmd.starts_with("ls ") {
                 if !command.contains(" -l") && !command.contains(" -a") {
                     format!("{} -la", command)
                 } else if !command.contains(" -l") {
@@ -156,7 +158,7 @@ pub fn get_current_dir() -> Result<String, String> {
 pub async fn list_directory_contents(path: Option<String>) -> Result<Vec<String>, String> {
     let dir_path = match path {
         Some(p) if !p.is_empty() => p,
-        _ => ".".to_string()
+        _ => ".".to_string(),
     };
 
     let ls_command = if cfg!(target_os = "windows") {
@@ -178,7 +180,11 @@ pub async fn list_directory_contents(path: Option<String>) -> Result<Vec<String>
             let mut file_list = Vec::new();
 
             // Skip the first line if it starts with "total" (ls summary)
-            let start_idx = if lines.get(0).map_or(false, |l| l.starts_with("total ")) { 1 } else { 0 };
+            let start_idx = if lines.get(0).map_or(false, |l| l.starts_with("total ")) {
+                1
+            } else {
+                0
+            };
 
             for line in lines.iter().skip(start_idx) {
                 let line_trim = line.trim();
@@ -188,10 +194,14 @@ pub async fn list_directory_contents(path: Option<String>) -> Result<Vec<String>
 
                 // Unix-style ls output with permissions
                 if cfg!(target_os = "linux") || cfg!(target_os = "macos") {
-                    if line_trim.len() < 10 { continue; }
+                    if line_trim.len() < 10 {
+                        continue;
+                    }
 
                     let parts: Vec<&str> = line_trim.split_whitespace().collect();
-                    if parts.len() < 9 { continue; }
+                    if parts.len() < 9 {
+                        continue;
+                    }
 
                     // Join all parts from index 8 to handle filenames with spaces
                     let filename = parts[8..].join(" ");
@@ -216,7 +226,10 @@ pub async fn list_directory_contents(path: Option<String>) -> Result<Vec<String>
                         let path = std::path::Path::new(line_trim);
                         if path.is_dir() {
                             file_list.push(format!("{}/", line_trim));
-                        } else if line_trim.ends_with(".exe") || line_trim.ends_with(".bat") || line_trim.ends_with(".cmd") {
+                        } else if line_trim.ends_with(".exe")
+                            || line_trim.ends_with(".bat")
+                            || line_trim.ends_with(".cmd")
+                        {
                             file_list.push(format!("{}*", line_trim));
                         } else {
                             file_list.push(line_trim.to_string());
@@ -226,7 +239,7 @@ pub async fn list_directory_contents(path: Option<String>) -> Result<Vec<String>
             }
 
             Ok(file_list)
-        },
-        Err(e) => Err(format!("Failed to list directory: {}", e))
+        }
+        Err(e) => Err(format!("Failed to list directory: {}", e)),
     }
 }

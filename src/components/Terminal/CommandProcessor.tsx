@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { parseInput } from '../../utils/intentParser';
 import type { CommandProcessorProps } from './types';
 
@@ -24,6 +25,19 @@ const useCommandProcessor = ({
             clearTerminal();
             setInput("");
             setIsProcessing(false);
+            return;
+        }
+
+        // Handle exit command
+        if (input.trim().toLowerCase() === 'exit') {
+            setInput("");
+            setTimeout(async () => {
+                try {
+                    await getCurrentWindow().close();
+                } catch (err) {
+                    setIsProcessing(false);
+                }
+            }, 5);
             return;
         }
 
