@@ -22,6 +22,9 @@ export function parseInput(input: string): Intent {
 
     // Likely system command: no question form, looks like shell input
     if (/^[a-zA-Z0-9./_-]+(\s+.*)?$/.test(trimmed)) {
+        if (trimmed.startsWith('cd ')) {
+            return { type: 'system_command', command: trimmed };
+        }
         return { type: 'system_command', command: trimmed };
     }
 

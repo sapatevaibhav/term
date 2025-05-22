@@ -4,10 +4,13 @@ DONE : sudo opens popup to enter pass
 DONE : ls colorful (file and folders)
 DONE: tab autocomplete
 DONE: exit closes term
+DONE: Build - NO_STRIP=true cargo tauri build --verbose
+DONE: Fix the cd command
 
 add markdown support
 add proper updates to the command like sync/update (for progress)
 handle nano/vim
 clickable links
-Fix the cd command
 write tests for each of above
+Persistent history
+API key in build

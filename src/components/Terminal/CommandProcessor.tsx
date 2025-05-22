@@ -45,23 +45,40 @@ const useCommandProcessor = ({
 
         try {
             if (parsed.type === "system_command") {
-                if (parsed.command.trim().startsWith("sudo ")) {
+                // Handle cd command separately
+                if (parsed.command.trim().startsWith("cd ")) {
+                    const path = parsed.command.trim().substring(3);
+                    try {
+                        const newDirectory = await invoke<string>("change_directory", { path });
+                        appendHistory({
+                            type: 'output',
+                            content: `Changed directory to: ${newDirectory}`
+                        });
+                    } catch (error: any) {
+                        appendHistory({
+                            type: 'error',
+                            content: error.toString()
+                        });
+                    }
+                }
+                else if (parsed.command.trim().startsWith("sudo ")) {
                     setPendingSudoCommand(parsed.command);
                     setShowPasswordDialog(true);
                     setInput("");
                     return;
                 }
+                else {
+                    const result = await invoke<string>("run_shell", { command: parsed.command });
+                    const commandNotFoundRegex = /\bcommand not found\b/i;
+                    const notRecognizedRegex = /\bnot recognized\b/i;
 
-                const result = await invoke<string>("run_shell", { command: parsed.command });
-                const commandNotFoundRegex = /\bcommand not found\b/i;
-                const notRecognizedRegex = /\bnot recognized\b/i;
-
-                if (commandNotFoundRegex.test(result) || notRecognizedRegex.test(result)) {
-                    appendHistory({ type: 'error', content: result.trim() });
-                    const fallback = await invoke<string>("ask_llm", { prompt: input });
-                    appendHistory({ type: 'llm', content: fallback.trim() });
-                } else {
-                    appendHistory({ type: 'output', content: result.trim() });
+                    if (commandNotFoundRegex.test(result) || notRecognizedRegex.test(result)) {
+                        appendHistory({ type: 'error', content: result.trim() });
+                        const fallback = await invoke<string>("ask_llm", { prompt: input });
+                        appendHistory({ type: 'llm', content: fallback.trim() });
+                    } else {
+                        appendHistory({ type: 'output', content: result.trim() });
+                    }
                 }
             } else if (parsed.type === "file_view") {
                 const result = await invoke<string>("read_file", { path: parsed.filename });

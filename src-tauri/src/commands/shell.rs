@@ -243,3 +243,25 @@ pub async fn list_directory_contents(path: Option<String>) -> Result<Vec<String>
         Err(e) => Err(format!("Failed to list directory: {}", e)),
     }
 }
+
+#[tauri::command]
+pub fn change_directory(path: String) -> Result<String, String> {
+    let expanded_path = if path.starts_with("~") {
+        if let Ok(home) = std::env::var("HOME") {
+            path.replacen("~", &home, 1)
+        } else {
+            path
+        }
+    } else {
+        path
+    };
+
+    match std::env::set_current_dir(expanded_path) {
+        Ok(_) => {
+            let new_dir = std::env::current_dir()
+                .map_err(|e| format!("Failed to get current directory: {}", e))?;
+            Ok(new_dir.to_string_lossy().into_owned())
+        },
+        Err(e) => Err(format!("Failed to change directory: {}", e))
+    }
+}
