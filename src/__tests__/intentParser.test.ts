@@ -2,45 +2,42 @@ import { describe, it, expect } from 'vitest';
 import { parseInput } from '../utils/intentParser';
 
 describe('Intent Parser', () => {
-  it('parses system commands correctly', () => {
+  it('parses basic commands correctly', () => {
     const result = parseInput('ls -la');
     expect(result.type).toBe('system_command');
-    expect(result).toHaveProperty('command', 'ls -la');
+    if (result.type === 'system_command') {
+      expect(result.command).toBe('ls -la');
+    }
   });
-  
+
   it('parses cd commands correctly', () => {
     const result = parseInput('cd /home/user');
-    // Update expectation to match actual implementation
     expect(result.type).toBe('system_command');
-    expect(result).toHaveProperty('command', 'cd /home/user');
+    if (result.type === 'system_command') {
+      expect(result.command).toBe('cd /home/user');
+    }
   });
-  
-  it('parses file view commands correctly', () => {
+
+  it('parses cat commands correctly', () => {
     const result = parseInput('cat file.txt');
-    // Update property name to match actual implementation - it might be 'filename' or 'filepath'
     expect(result.type).toBe('file_view');
-    // Use a more permissive check that doesn't depend on exact property name
-    const hasFileProperty = result.hasOwnProperty('filename') || 
-                           result.hasOwnProperty('filepath') || 
-                           result.hasOwnProperty('file');
-    expect(hasFileProperty).toBe(true);
+    if (result.type === 'file_view') {
+
+      expect(result).toHaveProperty('filename', 'file.txt');
+    }
   });
-  
-  it('parses file summary commands correctly', () => {
-    // Your implementation might handle 'summarize' commands differently
-    // Adjust the expectation to match the actual implementation
-    const result = parseInput('summarize file.txt');
-    // This might actually be handled as a system command in your implementation
-    expect(result.type).toBe('system_command');
-    expect(result).toHaveProperty('command', 'summarize file.txt');
+
+  it('handles empty input', () => {
+    const result = parseInput('');
+    expect(result.type).toBe('unknown');
+
   });
-  
-  it('parses LLM queries correctly', () => {
-    // Your implementation might only treat certain patterns as LLM queries
-    // Let's try with a more explicit LLM query format if your app supports one
-    const result = parseInput('ask how Node.js works');
-    // Adjust this if your implementation treats all unknown commands as system commands
+
+  it('handles commands with multiple arguments', () => {
+    const result = parseInput('grep -r "pattern" /path/to/files');
     expect(result.type).toBe('system_command');
-    expect(result).toHaveProperty('command', 'ask how Node.js works');
+    if (result.type === 'system_command') {
+      expect(result.command).toBe('grep -r "pattern" /path/to/files');
+    }
   });
 });

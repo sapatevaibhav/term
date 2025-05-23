@@ -30,14 +30,16 @@ const useCommandProcessor = ({
 
         // Handle exit command
         if (input.trim().toLowerCase() === 'exit') {
-            setInput("");
-            setTimeout(async () => {
-                try {
-                    await getCurrentWindow().close();
-                } catch (err) {
-                    setIsProcessing(false);
-                }
-            }, 5);
+            try {
+                await getCurrentWindow().close();
+            } catch (error) {
+                appendHistory({
+                    type: 'error',
+                    content: `Failed to exit: ${error}`
+                });
+            } finally {
+                setIsProcessing(false);
+            }
             return;
         }
 
