@@ -1,0 +1,9 @@
+[build]
+rustflags = ["-D", "warnings"]
+
+[target.'cfg(all())']
+rustflags = ["-D", "warnings"]
+
+[alias]
+lint = "clippy -- -D warnings"
+fix = "clippy --fix -- -D warnings"

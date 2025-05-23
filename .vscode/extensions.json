@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "rust-lang.rust-analyzer",
+    "bradlc.vscode-tailwindcss",
+    "vscode.typescript-language-features",
+    "dbaeumer.vscode-eslint"
+  ]
+}

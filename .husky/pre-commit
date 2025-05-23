@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run ESLint on staged files
+FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(jsx?|tsx?)$')
+if [ -n "$FILES" ]; then
+  echo "🔍 Linting and formatting TypeScript/JavaScript files..."
+  npx eslint $FILES --fix
+  npx prettier --write $FILES
+  git add $FILES
+fi
+
+# Run rustfmt on Rust files
+RUST_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.rs$')
+if [ -n "$RUST_FILES" ]; then
+  echo "🔍 Formatting Rust files..."
+  cd src-tauri && cargo fmt
+  git add $RUST_FILES
+fi
+
+echo "✅ Pre-commit checks passed!"
