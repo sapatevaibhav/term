@@ -6,6 +6,7 @@ DONE: tab autocomplete
 DONE: exit closes term
 DONE: Build - NO_STRIP=true cargo tauri build --verbose
 DONE: Fix the cd command
+DONE: change command to change the API key
 
 add markdown support
 add proper updates to the command like sync/update (for progress)
@@ -14,9 +15,9 @@ clickable links
 write tests for each of above
 Persistent history
 API key in build
-change command to change the API key
 change model to change the model
-A faster sudo command 
+A faster sudo command
 focus on infutfield in password field each time and after closing on terminal
-
-minimal ls
+Add support to various AI models like gemini, groq, etc
+minimal ls command output
+Implement context
