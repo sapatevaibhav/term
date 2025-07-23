@@ -141,6 +141,7 @@ Contributions are welcome! To get started:
 - Write clear commit messages
 - Add tests for new features when possible
 - Be respectful in code reviews and discussions
+- Do not push the code without manually testing and verifying it.
 
 ---
 
