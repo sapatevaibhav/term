@@ -16,187 +16,187 @@ const COMMON_COMMANDS = [
     'locate', 'mount', 'umount', 'df', 'free', 'uptime', 'date', 'cal',
     'passwd', 'su', 'adduser', 'useradd', 'deluser', 'userdel', 'groupadd',
     'groups', 'hostname', 'uname', 'lsblk', 'fdisk', 'parted', 'dd',
-    'xargs', 'awk', 'sed', 'sort', 'uniq', 'cut', 'tr', 'tee', 'less', 'more',
+    'xargs', 'awk', 'sed', 'sort', 'uniq', 'cut', 'tr', 'tee', 'less', 'more', 'setapikey', 'resetapikey'
 ];
 
 /**
  * Get the user's home directory
  */
 async function getHomeDirectory(): Promise<string> {
-  try {
-    return await invoke<string>('get_current_dir');
-  } catch (error) {
-    console.error("Error getting home directory:", error);
-    return '';
-  }
+    try {
+        return await invoke<string>('get_current_dir');
+    } catch (error) {
+        console.error("Error getting home directory:", error);
+        return '';
+    }
 }
 
 /**
  * Expands paths with ~ to use the home directory
  */
 async function expandPath(path: string): Promise<string> {
-  if (path.startsWith('~')) {
-    const home = await getHomeDirectory();
-    return path.replace(/^~/, home);
-  }
-  return path;
+    if (path.startsWith('~')) {
+        const home = await getHomeDirectory();
+        return path.replace(/^~/, home);
+    }
+    return path;
 }
 
 /**
  * Parse the input to extract path components
  */
 function parsePathInput(input: string): { dirToSearch: string, prefix: string, searchPattern: string } {
-  if (input.startsWith('/')) {
-    const lastSlashIndex = input.lastIndexOf('/');
-    if (lastSlashIndex === 0) {
-      return {
-        dirToSearch: '/',
-        prefix: '/',
-        searchPattern: input.substring(1).toLowerCase()
-      };
-    } else {
-      return {
-        dirToSearch: input.substring(0, lastSlashIndex),
-        prefix: input.substring(0, lastSlashIndex + 1),
-        searchPattern: input.substring(lastSlashIndex + 1).toLowerCase()
-      };
+    if (input.startsWith('/')) {
+        const lastSlashIndex = input.lastIndexOf('/');
+        if (lastSlashIndex === 0) {
+            return {
+                dirToSearch: '/',
+                prefix: '/',
+                searchPattern: input.substring(1).toLowerCase()
+            };
+        } else {
+            return {
+                dirToSearch: input.substring(0, lastSlashIndex),
+                prefix: input.substring(0, lastSlashIndex + 1),
+                searchPattern: input.substring(lastSlashIndex + 1).toLowerCase()
+            };
+        }
     }
-  }
-  else if (input.includes('/')) {
-    const lastSlashIndex = input.lastIndexOf('/');
-    return {
-      dirToSearch: input.substring(0, lastSlashIndex) || '.',
-      prefix: input.substring(0, lastSlashIndex + 1),
-      searchPattern: input.substring(lastSlashIndex + 1).toLowerCase()
-    };
-  }
-  else {
-    return {
-      dirToSearch: '.',
-      prefix: '',
-      searchPattern: input.toLowerCase()
-    };
-  }
+    else if (input.includes('/')) {
+        const lastSlashIndex = input.lastIndexOf('/');
+        return {
+            dirToSearch: input.substring(0, lastSlashIndex) || '.',
+            prefix: input.substring(0, lastSlashIndex + 1),
+            searchPattern: input.substring(lastSlashIndex + 1).toLowerCase()
+        };
+    }
+    else {
+        return {
+            dirToSearch: '.',
+            prefix: '',
+            searchPattern: input.toLowerCase()
+        };
+    }
 }
 
 export interface AutocompleteResult {
-  suggestions: string[];
-  replacement?: string;
-  commonPrefix?: string;
+    suggestions: string[];
+    replacement?: string;
+    commonPrefix?: string;
 }
 
 /**
  * Find common prefix among a list of strings
  */
 function findCommonPrefix(strings: string[]): string {
-  if (strings.length === 0) return '';
-  if (strings.length === 1) return strings[0];
+    if (strings.length === 0) return '';
+    if (strings.length === 1) return strings[0];
 
-  let prefix = strings[0];
-  for (let i = 1; i < strings.length; i++) {
-    let j = 0;
-    while (
-      j < prefix.length &&
-      j < strings[i].length &&
-      prefix[j].toLowerCase() === strings[i][j].toLowerCase()
-    ) {
-      j++;
+    let prefix = strings[0];
+    for (let i = 1; i < strings.length; i++) {
+        let j = 0;
+        while (
+            j < prefix.length &&
+            j < strings[i].length &&
+            prefix[j].toLowerCase() === strings[i][j].toLowerCase()
+        ) {
+            j++;
+        }
+        prefix = prefix.substring(0, j);
+        if (prefix === '') break;
     }
-    prefix = prefix.substring(0, j);
-    if (prefix === '') break;
-  }
 
-  return prefix;
+    return prefix;
 }
 
 /**
  * Get autocompletion suggestions for the current input
  */
 export async function getAutocompleteSuggestions(input: string): Promise<AutocompleteResult> {
-  if (!input.trim()) {
+    if (!input.trim()) {
+        return { suggestions: [] };
+    }
+
+    const words = input.split(' ');
+    const lastWord = words[words.length - 1];
+    const isFirstWord = words.length === 1;
+    const beforeLastWord = input.substring(0, input.length - lastWord.length);
+
+    // Special case: command with space at the end - suggest files in current directory
+    if (input.endsWith(' ')) {
+        const files = await invoke<string[]>('list_directory_contents', { path: '.' });
+        return { suggestions: files };
+    }
+
+    if (isFirstWord) {
+        const matchingCommands = COMMON_COMMANDS.filter(cmd =>
+            cmd.toLowerCase().startsWith(lastWord.toLowerCase())
+        );
+
+        if (matchingCommands.length > 0) {
+            if (matchingCommands.length === 1) {
+                return {
+                    suggestions: matchingCommands,
+                    replacement: matchingCommands[0]
+                };
+            }
+
+            const commonPrefix = findCommonPrefix(matchingCommands);
+            if (commonPrefix.length > lastWord.length) {
+                return {
+                    suggestions: matchingCommands,
+                    commonPrefix: commonPrefix
+                };
+            }
+
+            return { suggestions: matchingCommands };
+        }
+    }
+
+    // File path completion
+    const { dirToSearch, prefix, searchPattern } = parsePathInput(lastWord);
+
+    try {
+        let dirPath = dirToSearch;
+        if (dirPath.startsWith('~')) {
+            dirPath = await expandPath(dirPath);
+        }
+
+        const files = await invoke<string[]>('list_directory_contents', { path: dirPath });
+
+        const matchingFiles = files.filter(file => {
+            const fileName = file.includes('/') ?
+                file.substring(file.lastIndexOf('/') + 1) : file;
+
+            const cleanName = fileName.endsWith('/') || fileName.endsWith('*') ?
+                fileName.slice(0, -1) : fileName;
+
+            return cleanName.toLowerCase().startsWith(searchPattern);
+        });
+
+        const completions = matchingFiles.map(file => prefix + file);
+
+        if (completions.length === 1) {
+            return {
+                suggestions: completions,
+                replacement: beforeLastWord + completions[0]
+            };
+        }
+
+        if (completions.length > 1) {
+            const commonPrefix = findCommonPrefix(completions);
+            if (commonPrefix.length > prefix.length) {
+                return {
+                    suggestions: completions,
+                    commonPrefix: beforeLastWord + commonPrefix
+                };
+            }
+
+            return { suggestions: completions };
+        }
+    } catch (error) {
+        console.error('Error completing file path:', error);
+    }
+
     return { suggestions: [] };
-  }
-
-  const words = input.split(' ');
-  const lastWord = words[words.length - 1];
-  const isFirstWord = words.length === 1;
-  const beforeLastWord = input.substring(0, input.length - lastWord.length);
-
-  // Special case: command with space at the end - suggest files in current directory
-  if (input.endsWith(' ')) {
-    const files = await invoke<string[]>('list_directory_contents', { path: '.' });
-    return { suggestions: files };
-  }
-
-  if (isFirstWord) {
-    const matchingCommands = COMMON_COMMANDS.filter(cmd =>
-      cmd.toLowerCase().startsWith(lastWord.toLowerCase())
-    );
-
-    if (matchingCommands.length > 0) {
-      if (matchingCommands.length === 1) {
-        return {
-          suggestions: matchingCommands,
-          replacement: matchingCommands[0]
-        };
-      }
-
-      const commonPrefix = findCommonPrefix(matchingCommands);
-      if (commonPrefix.length > lastWord.length) {
-        return {
-          suggestions: matchingCommands,
-          commonPrefix: commonPrefix
-        };
-      }
-
-      return { suggestions: matchingCommands };
-    }
-  }
-
-  // File path completion
-  const { dirToSearch, prefix, searchPattern } = parsePathInput(lastWord);
-
-  try {
-    let dirPath = dirToSearch;
-    if (dirPath.startsWith('~')) {
-      dirPath = await expandPath(dirPath);
-    }
-
-    const files = await invoke<string[]>('list_directory_contents', { path: dirPath });
-
-    const matchingFiles = files.filter(file => {
-      const fileName = file.includes('/') ?
-        file.substring(file.lastIndexOf('/') + 1) : file;
-
-      const cleanName = fileName.endsWith('/') || fileName.endsWith('*') ?
-        fileName.slice(0, -1) : fileName;
-
-      return cleanName.toLowerCase().startsWith(searchPattern);
-    });
-
-    const completions = matchingFiles.map(file => prefix + file);
-
-    if (completions.length === 1) {
-      return {
-        suggestions: completions,
-        replacement: beforeLastWord + completions[0]
-      };
-    }
-
-    if (completions.length > 1) {
-      const commonPrefix = findCommonPrefix(completions);
-      if (commonPrefix.length > prefix.length) {
-        return {
-          suggestions: completions,
-          commonPrefix: beforeLastWord + commonPrefix
-        };
-      }
-
-      return { suggestions: completions };
-    }
-  } catch (error) {
-    console.error('Error completing file path:', error);
-  }
-
-  return { suggestions: [] };
 }

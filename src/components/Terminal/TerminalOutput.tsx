@@ -1,11 +1,11 @@
 import React, { useRef, useEffect } from 'react';
-import type { HistoryEntry } from './types';
+import type { HistoryItem } from './types';
 import WelcomeMessage from './WelcomeMessage';
 import OutputFormatter from './OutputFormatter';
 import Spinner from '../UI/Spinner';
 
 interface TerminalOutputProps {
-    history: HistoryEntry[];
+    history: HistoryItem[];
     isProcessing: boolean;
 }
 

@@ -1,6 +1,11 @@
 #[tauri::command]
-pub async fn ask_llm(prompt: String) -> Result<String, String> {
-    let key = std::env::var("OPENAI_API_KEY").map_err(|_| "Missing API key".to_string())?;
+pub async fn ask_llm(prompt: String, app_handle: tauri::AppHandle) -> Result<String, String> {
+    // First try to get API key from storage
+    let key = match crate::commands::api_key::get_api_key(app_handle).await {
+        Ok(stored_key) if !stored_key.is_empty() => stored_key,
+        _ => return Err("API key not configured. Please set your OpenAI API key with the 'setapikey YOUR_API_KEY' command.".to_string())
+    };
+
     let client = reqwest::Client::new();
 
     let os_name = if cfg!(target_os = "windows") {
