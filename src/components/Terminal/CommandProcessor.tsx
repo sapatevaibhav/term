@@ -97,8 +97,9 @@ const useCommandProcessor = ({
                     });
                 }
             } catch (error) {
+                // The error message now contains detailed information from Rust
                 appendHistory({
-                    content: `Error validating API key: ${error}`,
+                    content: `${error}`,
                     type: 'error'
                 });
             }

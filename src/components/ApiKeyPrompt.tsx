@@ -30,7 +30,8 @@ const ApiKeyPrompt: React.FC<ApiKeyPromptProps> = ({ onKeySet }) => {
                 setError('Invalid API key. Please check and try again.');
             }
         } catch (err) {
-            setError(`Error: ${err}`);
+            // Display the detailed error message from the Rust backend
+            setError(`${err}`);
         } finally {
             setIsValidating(false);
         }

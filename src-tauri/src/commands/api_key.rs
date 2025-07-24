@@ -37,20 +37,39 @@ pub async fn get_api_key(app_handle: AppHandle) -> Result<String, String> {
 // Validate API key with OpenAI
 #[tauri::command]
 pub async fn validate_api_key(key: String) -> Result<bool, String> {
+    // Basic format validation
+    if !key.starts_with("sk-") {
+        return Err("API key must start with 'sk-'".to_string());
+    }
+
+    if key.len() < 40 {
+        return Err("API key appears to be too short".to_string());
+    }
+
     let client = reqwest::Client::new();
+    
+    // Try a simpler models endpoint to validate the key
     let res = client
-        .post("https://api.openai.com/v1/chat/completions")
+        .get("https://api.openai.com/v1/models")
         .header("Authorization", format!("Bearer {}", key))
-        .json(&serde_json::json!({
-            "model": "gpt-4o-mini",
-            "messages": [{"role": "user", "content": "Hi"}],
-            "max_tokens": 1
-        }))
+        .header("User-Agent", "Terminal-App/1.0")
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("Network error: {}", e))?;
 
-    Ok(res.status().is_success())
+    if res.status().is_success() {
+        Ok(true)
+    } else {
+        let status = res.status();
+        let error_text = res.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+        
+        match status.as_u16() {
+            401 => Err("Invalid API key - authentication failed".to_string()),
+            403 => Err("API key lacks required permissions".to_string()),
+            429 => Err("Rate limit exceeded - please try again later".to_string()),
+            _ => Err(format!("API validation failed ({}): {}", status, error_text))
+        }
+    }
 }
 
 // Delete the API key file
