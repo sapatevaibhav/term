@@ -42,7 +42,7 @@ pub async fn validate_api_key(key: String) -> Result<bool, String> {
         return Err("API key must start with 'sk-'".to_string());
     }
 
-    if key.len() < 40 {
+    if key.len() < 20 {
         return Err("API key appears to be too short".to_string());
     }
 
@@ -67,6 +67,7 @@ pub async fn validate_api_key(key: String) -> Result<bool, String> {
             401 => Err("Invalid API key - authentication failed".to_string()),
             403 => Err("API key lacks required permissions".to_string()),
             429 => Err("Rate limit exceeded - please try again later".to_string()),
+            500..=599 => Err(format!("OpenAI server error ({}): {}", status, error_text)),
             _ => Err(format!("API validation failed ({}): {}", status, error_text))
         }
     }

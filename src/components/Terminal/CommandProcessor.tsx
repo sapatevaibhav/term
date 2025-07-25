@@ -99,7 +99,7 @@ const useCommandProcessor = ({
             } catch (error) {
                 // The error message now contains detailed information from Rust
                 appendHistory({
-                    content: `${error}`,
+                    content: `API Error: ${error}`,
                     type: 'error'
                 });
             }

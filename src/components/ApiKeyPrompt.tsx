@@ -31,7 +31,7 @@ const ApiKeyPrompt: React.FC<ApiKeyPromptProps> = ({ onKeySet }) => {
             }
         } catch (err) {
             // Display the detailed error message from the Rust backend
-            setError(`${err}`);
+            setError(`API Error: ${err}`);
         } finally {
             setIsValidating(false);
         }
