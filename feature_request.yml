@@ -1,0 +1,47 @@
+name: :bulb: Feature Request
+description: Suggest an idea for this project.
+title: "[FEATURE] - <brief title>"
+labels: [enhancement]
+assignees: []
+body:
+type: markdown
+    attributes:
+      value: |
+        ## :bulb: Thanks for suggesting a feature!
+        Please complete the details below to help us understand and evaluate your request.
+type: input
+    id: motivation
+    attributes:
+      label: What problem are you trying to solve?
+      description: Why do you want this feature? What pain point does it solve?
+      placeholder: "e.g., It's hard to track X because..."
+type: textarea
+    id: proposed-solution
+    attributes:
+      label: Describe the solution you'd like
+      description: Tell us what you imagine as the ideal implementation.
+      placeholder: "e.g., Add a button to allow..."
+    validations:
+      required: true
+type: textarea
+    id: alternatives
+    attributes:
+      label: Have you considered any alternatives?
+      description: Share any different approaches you’ve thought of.
+      placeholder: "e.g., I also considered using..."
+type: dropdown
+    id: urgency
+    attributes:
+      label: How urgent is this feature?
+      options:
+Nice to have
+Important, but not urgent
+Blocking my progress
+    validations:
+      required: true
+type: textarea
+    id: context
+    attributes:
+      label: Additional Context or Examples
+      description: Anything else we should know? Links, screenshots, references, etc.
+      placeholder: "e.g., Related to #42 or inspired by [this project](https://example.com)"
