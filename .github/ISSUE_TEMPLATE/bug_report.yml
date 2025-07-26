@@ -1,0 +1,113 @@
+name: :ladybug: Bug Report
+description: Report a bug or unexpected behavior in the project.
+title: "[BUG] - <brief title>"
+labels: [bug]
+assignees: []
+body:
+type: markdown
+    attributes:
+      value: |
+        ## :pray: Thanks for reporting a bug!
+        Please fill out the form below as clearly and completely as possible so we can help you faster.
+type: input
+    id: contact
+    attributes:
+      label: Contact Details (optional)
+      description: Leave your GitHub or email if you're open to follow-up questions.
+      placeholder: "yourname@domain.com or @github-handle"
+    validations:
+      required: false
+type: dropdown
+    id: type
+    attributes:
+      label: Type of Bug
+      description: What kind of bug is this?
+      options:
+Crash / error
+Incorrect output
+UI glitch or design issue
+Broken functionality
+Other
+    validations:
+      required: true
+type: textarea
+    id: summary
+    attributes:
+      label: Summary of the Issue
+      description: What is the bug? Be clear and concise.
+      placeholder: |
+        Example: When I click the "Submit" button, nothing happens.
+    validations:
+      required: true
+type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Step-by-step instructions to reproduce the issue.
+      placeholder: |
+Go to '...'
+Click on '...'
+Scroll down to '...'
+See error '...'
+    validations:
+      required: true
+type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Example: The form should submit and show a confirmation message.
+    validations:
+      required: true
+type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened instead?
+      placeholder: Example: The page stayed the same and no message appeared.
+    validations:
+      required: true
+type: input
+    id: device
+    attributes:
+      label: Device / Environment
+      description: Where did this happen?
+      placeholder: "e.g., Windows 11, macOS 14, Android 13, iPhone 15 Pro"
+    validations:
+      required: true
+type: input
+    id: browser
+    attributes:
+      label: Browser / App Version (if applicable)
+      placeholder: "e.g., Chrome 125, Firefox 117, App v1.0.5"
+    validations:
+      required: false
+type: dropdown
+    id: reproducible
+    attributes:
+      label: Is this bug reproducible?
+      options:
+Always
+Sometimes
+Rarely
+Only happened once
+Not sure
+    validations:
+      required: true
+type: textarea
+    id: logs
+    attributes:
+      label: Screenshots / Logs / Errors
+      description: Please paste any error messages or screenshots that help describe the issue.
+      placeholder: |
+        Drag and drop screenshots here or paste error logs.
+    validations:
+      required: false
+type: textarea
+    id: notes
+    attributes:
+      label: Additional Context
+      description: Any other relevant context? Links to related issues or PRs?
+      placeholder: Example: This issue seems related to #42.
+    validations:
+      required: false
