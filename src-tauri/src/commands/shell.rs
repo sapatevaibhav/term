@@ -150,7 +150,13 @@ fi
 #[tauri::command]
 pub fn get_current_dir() -> Result<String, String> {
     std::env::current_dir()
-        .map(|path| path.to_string_lossy().into_owned())
+        .map(|path| {
+            let mut normalized = path.to_string_lossy().replace("\\", "/");
+            if let Some(index) = normalized.find(':') {
+                normalized = format!(".{}", &normalized[index + 1..]);
+            }
+            normalized
+        })
         .map_err(|e| format!("Failed to get current directory: {}", e))
 }
 

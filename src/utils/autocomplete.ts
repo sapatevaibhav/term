@@ -116,7 +116,7 @@ export async function getAutocompleteSuggestions(input: string): Promise<Autocom
     if (!input.trim()) {
         return { suggestions: [] };
     }
-
+    const currentDir = await getHomeDirectory();
     const words = input.split(' ');
     const lastWord = words[words.length - 1];
     const isFirstWord = words.length === 1;
@@ -124,7 +124,8 @@ export async function getAutocompleteSuggestions(input: string): Promise<Autocom
 
     // Special case: command with space at the end - suggest files in current directory
     if (input.endsWith(' ')) {
-        const files = await invoke<string[]>('list_directory_contents', { path: '.' });
+        const files = await invoke<string[]>('list_directory_contents', { path: currentDir });
+        console.log(currentDir)
         return { suggestions: files };
     }
 
@@ -158,6 +159,9 @@ export async function getAutocompleteSuggestions(input: string): Promise<Autocom
 
     try {
         let dirPath = dirToSearch;
+        if (dirPath === '.') {
+            dirPath = await getHomeDirectory();
+        }
         if (dirPath.startsWith('~')) {
             dirPath = await expandPath(dirPath);
         }
