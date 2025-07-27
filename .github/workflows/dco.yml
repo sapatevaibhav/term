@@ -1,0 +1,20 @@
+name: DCO Check
+
+on:
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  dco-check:
+    runs-on: ubuntu-latest
+    name: Developer Certificate of Origin Check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: DCO Check
+        uses: dcoapp/dco@v1.0.4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
