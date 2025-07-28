@@ -19,16 +19,27 @@ const COMMON_COMMANDS = [
     'xargs', 'awk', 'sed', 'sort', 'uniq', 'cut', 'tr', 'tee', 'less', 'more', 'setapikey', 'resetapikey'
 ];
 
+// Cache cwd
+let cachedCurrentDir: string | null = null;
+
+/**
+ * Refresh cached directory after `cd` command
+ */
+export async function refreshCurrentDir(): Promise<string> {
+    try {
+        cachedCurrentDir = await invoke<string>('get_current_dir'); 
+        return cachedCurrentDir;
+    } catch (error) {
+        return cachedCurrentDir || '';
+    }
+}
+
 /**
  * Get the user's home directory
  */
 async function getHomeDirectory(): Promise<string> {
-    try {
-        return await invoke<string>('get_current_dir');
-    } catch (error) {
-        console.error("Error getting home directory:", error);
-        return '';
-    }
+    if (cachedCurrentDir) return cachedCurrentDir
+    return await refreshCurrentDir(); 
 }
 
 /**
@@ -125,7 +136,6 @@ export async function getAutocompleteSuggestions(input: string): Promise<Autocom
     // Special case: command with space at the end - suggest files in current directory
     if (input.endsWith(' ')) {
         const files = await invoke<string[]>('list_directory_contents', { path: currentDir });
-        console.log(currentDir)
         return { suggestions: files };
     }
 
