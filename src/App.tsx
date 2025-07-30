@@ -1,8 +1,12 @@
-import Terminal from './components/Terminal';
 import './App.css';
+import Terminal from './components/Terminal';
 
 function App() {
-    return <Terminal />;
+  return (
+    <div className="h-screen w-full">
+      <Terminal />
+    </div>
+  );
 }
 
 export default App;

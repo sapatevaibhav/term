@@ -15,7 +15,7 @@ export default {
           error: '#e06c75',
           llm: '#98c379',
           prompt: '#61afef',
-          border: '#333',
+          border: '#333'
         }
       },
       fontFamily: {
