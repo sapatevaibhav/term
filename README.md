@@ -132,16 +132,27 @@ npx tauri dev  # or npm run tauri dev
 Contributions are welcome! To get started:
 1. Fork the repository
 2. Create a new branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m 'Add feature'`)
+3. Commit your changes with DCO sign-off (`git commit -s -m 'Add feature'`)
 4. Push to your fork (`git push origin feature/your-feature`)
 5. Open a Pull Request
 
 ### Guidelines
 - Follow the existing code style (see ESLint/Prettier configs)
-- Write clear commit messages
+- Write clear commit messages using [Conventional Commits](https://www.conventionalcommits.org/)
+- **All commits must be signed off** (see [DCO requirements](.github/DCO.md))
 - Add tests for new features when possible
 - Be respectful in code reviews and discussions
-- Do not push the code without manually testing and verifying it.
+- Do not push the code without manually testing and verifying it
+
+### Developer Certificate of Origin (DCO)
+This project requires all contributors to sign off their commits with the Developer Certificate of Origin (DCO). This certifies that you have the right to submit your contribution under the project's license.
+
+**How to sign off commits:**
+```bash
+git commit -s -m "your commit message"
+```
+
+For more details, see our [DCO documentation](.github/DCO.md).
 
 ---
 
