@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import useCommandHistory from '../../hooks/useCommandHistory';
-import { getAutocompleteSuggestions } from '../../utils/autocomplete';
+import { getAutocompleteSuggestions, refreshCurrentDir } from '../../utils/autocomplete';
 
 interface TerminalInputProps {
     input: string;
@@ -155,20 +155,18 @@ const TerminalInput: React.FC<TerminalInputProps> = ({
         }
     };
 
-    const handleSubmitWrapper = (e: React.FormEvent) => {
+    const handleSubmitWrapper = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim()) return;
-
-        if (input.trim()) {
-            addToHistory(input.trim());
-        }
-
+        const trimmedInput = input.trim();
+        if (!trimmedInput) return;
+        if (trimmedInput) addToHistory(input.trim());  
         setSuggestions([]);
         setCurrentSuggestionIndex(0);
         setShowCompletionHelp(false);
         setTabPressCount(0);
 
         onSubmit(e);
+        if (trimmedInput.startsWith('cd ')) await refreshCurrentDir();//refresh cached dir on `cd`
     };
 
     return (
