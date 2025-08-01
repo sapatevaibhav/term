@@ -150,9 +150,25 @@ fi
 #[tauri::command]
 pub fn get_current_dir() -> Result<String, String> {
     std::env::current_dir()
-        .map(|path| path.to_string_lossy().into_owned())
+        .map(|path| {
+            let mut normalized = path.to_string_lossy().replace("\\", "/");
+            if let Some(index) = normalized.find(':') {
+                normalized = format!(".{}", &normalized[index + 1..]);
+            }
+            normalized
+        })
         .map_err(|e| format!("Failed to get current directory: {}", e))
 }
+
+#[tauri::command]
+pub fn get_home_dir() -> Result<String, String> {
+    if let Some(home) = dirs::home_dir() {
+        Ok(home.to_string_lossy().into_owned())
+    } else {
+        Err("Failed to get home directory".to_string())
+    }
+}
+
 
 #[tauri::command]
 pub async fn list_directory_contents(path: Option<String>) -> Result<Vec<String>, String> {
