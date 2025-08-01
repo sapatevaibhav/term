@@ -33,6 +33,12 @@ const PasswordDialog: React.FC<PasswordDialogProps> = ({ isOpen, onClose, onSubm
         onSubmit(password);
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Escape' && !isSubmitting) {
+            onClose();
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -44,7 +50,7 @@ const PasswordDialog: React.FC<PasswordDialogProps> = ({ isOpen, onClose, onSubm
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
                     </div>
-                    <h3 className="text-xl font-bold text-white">Administrator Privileges Required</h3>
+                    <h3 className="text-xl font-bold text-white">⚡ Fast Sudo Authentication</h3>
                 </div>
 
                 <p className="text-gray-300 mb-4">
@@ -54,7 +60,7 @@ const PasswordDialog: React.FC<PasswordDialogProps> = ({ isOpen, onClose, onSubm
                     {commandText}
                 </pre>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
                     <div className="mb-4">
                         <label htmlFor="password" className="block text-gray-400 mb-2">Password:</label>
                         <input
@@ -68,7 +74,7 @@ const PasswordDialog: React.FC<PasswordDialogProps> = ({ isOpen, onClose, onSubm
                             disabled={isSubmitting}
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                            Your password will not be stored and is only used to execute this command.
+                            Password will be cached for 15 minutes for faster subsequent commands.
                         </p>
                     </div>
 
@@ -94,7 +100,9 @@ const PasswordDialog: React.FC<PasswordDialogProps> = ({ isOpen, onClose, onSubm
                                     Authenticating...
                                 </>
                             ) : (
-                                'Submit'
+                                <>
+                                    ⚡ Authenticate
+                                </>
                             )}
                         </button>
                     </div>
