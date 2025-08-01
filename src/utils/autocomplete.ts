@@ -19,11 +19,12 @@ const COMMON_COMMANDS = [
     'xargs', 'awk', 'sed', 'sort', 'uniq', 'cut', 'tr', 'tee', 'less', 'more', 'setapikey', 'resetapikey'
 ];
 
-// Cache cwd
+
 let cachedCurrentDir: string | null = null;
+let cachedHomeDir: string | null = null;
 
 /**
- * Refresh cached directory after `cd` command
+ * Refresh cached current directory after `cd` command
  */
 export async function refreshCurrentDir(): Promise<string> {
     try {
@@ -34,13 +35,28 @@ export async function refreshCurrentDir(): Promise<string> {
     }
 }
 
+
+/**
+ * Get the user's current directory
+ */
+async function getCurrentDirectory(): Promise<string> {
+    if (cachedCurrentDir) return cachedCurrentDir
+    return await refreshCurrentDir(); 
+}
+
 /**
  * Get the user's home directory
  */
 async function getHomeDirectory(): Promise<string> {
-    if (cachedCurrentDir) return cachedCurrentDir
-    return await refreshCurrentDir(); 
+    if (cachedHomeDir) return cachedHomeDir;
+    try {
+        cachedHomeDir = await invoke<string>('get_home_dir');
+        return cachedHomeDir;
+    } catch {
+        return ''; 
+    }
 }
+
 
 /**
  * Expands paths with ~ to use the home directory
@@ -127,7 +143,7 @@ export async function getAutocompleteSuggestions(input: string): Promise<Autocom
     if (!input.trim()) {
         return { suggestions: [] };
     }
-    const currentDir = await getHomeDirectory();
+    const currentDir = await getCurrentDirectory();
     const words = input.split(' ');
     const lastWord = words[words.length - 1];
     const isFirstWord = words.length === 1;
@@ -170,7 +186,7 @@ export async function getAutocompleteSuggestions(input: string): Promise<Autocom
     try {
         let dirPath = dirToSearch;
         if (dirPath === '.') {
-            dirPath = await getHomeDirectory();
+            dirPath = await getCurrentDirectory();
         }
         if (dirPath.startsWith('~')) {
             dirPath = await expandPath(dirPath);

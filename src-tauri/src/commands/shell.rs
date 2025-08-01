@@ -161,6 +161,16 @@ pub fn get_current_dir() -> Result<String, String> {
 }
 
 #[tauri::command]
+pub fn get_home_dir() -> Result<String, String> {
+    if let Some(home) = dirs::home_dir() {
+        Ok(home.to_string_lossy().into_owned())
+    } else {
+        Err("Failed to get home directory".to_string())
+    }
+}
+
+
+#[tauri::command]
 pub async fn list_directory_contents(path: Option<String>) -> Result<Vec<String>, String> {
     let dir_path = match path {
         Some(p) if !p.is_empty() => p,
