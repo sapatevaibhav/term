@@ -211,3 +211,8 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 For issues and TODOs, see the [TODO File](TODO).
+
+<p align="center">
+  <a href="#term---minimal-ai-terminal-assistant"><strong>⬆️BACK TO TOP⬆️</strong></a>
+</p>
+
