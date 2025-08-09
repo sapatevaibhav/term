@@ -28,6 +28,43 @@ const useCommandProcessor = ({
             return;
         }
 
+        // Handle conversation history commands
+        if (input.trim().toLowerCase() === 'clearhistory' || input.trim().toLowerCase() === 'clear-history') {
+            try {
+                await invoke('clear_conversation_history');
+                appendHistory({
+                    type: 'output',
+                    content: 'Conversation history cleared successfully.'
+                });
+            } catch (error) {
+                appendHistory({
+                    type: 'error',
+                    content: `Failed to clear conversation history: ${error}`
+                });
+            }
+            setInput('');
+            setIsProcessing(false);
+            return;
+        }
+
+        if (input.trim().toLowerCase() === 'showhistory' || input.trim().toLowerCase() === 'show-history') {
+            try {
+                const summary = await invoke<string>('get_conversation_summary');
+                appendHistory({
+                    type: 'output',
+                    content: summary
+                });
+            } catch (error) {
+                appendHistory({
+                    type: 'error',
+                    content: `Failed to get conversation history: ${error}`
+                });
+            }
+            setInput('');
+            setIsProcessing(false);
+            return;
+        }
+
         // Handle exit command
         if (input.trim().toLowerCase() === 'exit') {
             try {
@@ -97,7 +134,6 @@ const useCommandProcessor = ({
                     });
                 }
             } catch (error) {
-                // The error message now contains detailed information from Rust
                 appendHistory({
                     content: `API Error: ${error}`,
                     type: 'error'
@@ -163,7 +199,8 @@ const useCommandProcessor = ({
 
                     if (commandNotFoundRegex.test(result) || notRecognizedRegex.test(result)) {
                         appendHistory({ type: 'error', content: result.trim() });
-                        const fallback = await invoke<string>("ask_llm", { prompt: input });
+                        // Use the new AI function with history context
+                        const fallback = await invoke<string>("ask_llm_with_history", { prompt: input });
                         appendHistory({ type: 'llm', content: fallback.trim() });
                     } else {
                         appendHistory({ type: 'output', content: result.trim() });
@@ -174,13 +211,15 @@ const useCommandProcessor = ({
                 appendHistory({ type: 'output', content: result.trim() });
             } else if (parsed.type === "file_summary") {
                 const fileContent = await invoke<string>("read_file", { path: parsed.filename });
-                const summary = await invoke<string>("ask_llm", {
+                // Use the new AI function with history context
+                const summary = await invoke<string>("ask_llm_with_history", {
                     prompt: `Summarize the following file:\n\n${fileContent}`,
                 });
                 appendHistory({ type: 'llm', content: summary.trim() });
             } else if (parsed.type === "llm_query") {
                 try {
-                    const result = await invoke<string>("ask_llm", { prompt: parsed.prompt });
+                    // Use the new AI function with history context
+                    const result = await invoke<string>("ask_llm_with_history", { prompt: parsed.prompt });
                     appendHistory({ type: 'llm', content: result.trim() });
                 } catch (error: any) {
                     // Handle API key not configured errors
@@ -199,7 +238,8 @@ const useCommandProcessor = ({
                 }
             } else {
                 try {
-                    const fallback = await invoke<string>("ask_llm", { prompt: input });
+                    // Use the new AI function with history context
+                    const fallback = await invoke<string>("ask_llm_with_history", { prompt: input });
                     appendHistory({ type: 'llm', content: fallback.trim() });
                 } catch (error: any) {
                     // Handle API key not configured errors
