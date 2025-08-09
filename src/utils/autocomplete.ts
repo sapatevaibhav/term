@@ -19,17 +19,44 @@ const COMMON_COMMANDS = [
     'xargs', 'awk', 'sed', 'sort', 'uniq', 'cut', 'tr', 'tee', 'less', 'more', 'setapikey', 'resetapikey'
 ];
 
+
+let cachedCurrentDir: string | null = null;
+let cachedHomeDir: string | null = null;
+
+/**
+ * Refresh cached current directory after `cd` command
+ */
+export async function refreshCurrentDir(): Promise<string> {
+    try {
+        cachedCurrentDir = await invoke<string>('get_current_dir'); 
+        return cachedCurrentDir;
+    } catch (error) {
+        return cachedCurrentDir || '';
+    }
+}
+
+
+/**
+ * Get the user's current directory
+ */
+async function getCurrentDirectory(): Promise<string> {
+    if (cachedCurrentDir) return cachedCurrentDir
+    return await refreshCurrentDir(); 
+}
+
 /**
  * Get the user's home directory
  */
 async function getHomeDirectory(): Promise<string> {
+    if (cachedHomeDir) return cachedHomeDir;
     try {
-        return await invoke<string>('get_current_dir');
-    } catch (error) {
-        console.error("Error getting home directory:", error);
-        return '';
+        cachedHomeDir = await invoke<string>('get_home_dir');
+        return cachedHomeDir;
+    } catch {
+        return ''; 
     }
 }
+
 
 /**
  * Expands paths with ~ to use the home directory
@@ -116,7 +143,7 @@ export async function getAutocompleteSuggestions(input: string): Promise<Autocom
     if (!input.trim()) {
         return { suggestions: [] };
     }
-
+    const currentDir = await getCurrentDirectory();
     const words = input.split(' ');
     const lastWord = words[words.length - 1];
     const isFirstWord = words.length === 1;
@@ -124,7 +151,7 @@ export async function getAutocompleteSuggestions(input: string): Promise<Autocom
 
     // Special case: command with space at the end - suggest files in current directory
     if (input.endsWith(' ')) {
-        const files = await invoke<string[]>('list_directory_contents', { path: '.' });
+        const files = await invoke<string[]>('list_directory_contents', { path: currentDir });
         return { suggestions: files };
     }
 
@@ -158,6 +185,9 @@ export async function getAutocompleteSuggestions(input: string): Promise<Autocom
 
     try {
         let dirPath = dirToSearch;
+        if (dirPath === '.') {
+            dirPath = await getCurrentDirectory();
+        }
         if (dirPath.startsWith('~')) {
             dirPath = await expandPath(dirPath);
         }
